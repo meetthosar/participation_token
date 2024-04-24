@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.vscode/**'
+      - '.idea/**'
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  participation_token-contracts-validate:
+    name: Run participation_token-contracts release
+    secrets: inherit
+    uses: ./.github/workflows/participation_token-contracts-ci.yaml
+
+  participation_token-contracts-release:
+    name: Run participation_token-contracts release
+    secrets: inherit
+    uses: ./.github/workflows/participation_token-contracts-cd.yaml
+    needs: participation_token-contracts-validate
+
+  participation_token-frontend-validate:
+    name: Run participation_token-frontend release
+    secrets: inherit
+    uses: ./.github/workflows/participation_token-frontend-ci.yaml
+
+  participation_token-frontend-release:
+    name: Run participation_token-frontend release
+    secrets: inherit
+    uses: ./.github/workflows/participation_token-frontend-cd.yaml
+    needs: participation_token-frontend-validate

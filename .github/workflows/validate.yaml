@@ -1,0 +1,14 @@
+name: Pull Request validation
+
+on: [pull_request]
+
+
+jobs:
+  participation_token-contracts-ci:
+    name: Run participation_token-contracts validation
+    uses: ./.github/workflows/participation_token-contracts-ci.yaml
+
+  participation_token-frontend-ci:
+    name: Run participation_token-frontend validation
+    uses: ./.github/workflows/participation_token-frontend-ci.yaml
+
