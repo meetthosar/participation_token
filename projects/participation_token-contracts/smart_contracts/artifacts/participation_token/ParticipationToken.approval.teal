@@ -1,0 +1,454 @@
+#pragma version 10
+
+smart_contracts.participation_token.contract.ParticipationToken.approval_program:
+    // smart_contracts/participation_token/contract.py:14
+    // class ParticipationToken(ARC4Contract):
+    method "create_application(uint64,uint64)void"
+    method "opt_in_to_asset(pay)void"
+    method "claim(pay)void"
+    method "delete_application()void"
+    txna ApplicationArgs 0
+    match main_create_application_route@1 main_opt_in_to_asset_route@2 main_claim_route@3 main_delete_application_route@4
+    err // reject transaction
+
+main_create_application_route@1:
+    // smart_contracts/participation_token/contract.py:18
+    // @arc4.abimethod(allow_actions=["NoOp"], create="require")
+    txn OnCompletion
+    !
+    assert // OnCompletion is NoOp
+    txn ApplicationID
+    !
+    assert // is creating
+    // smart_contracts/participation_token/contract.py:14
+    // class ParticipationToken(ARC4Contract):
+    txna ApplicationArgs 1
+    btoi
+    txna ApplicationArgs 2
+    btoi
+    // smart_contracts/participation_token/contract.py:18
+    // @arc4.abimethod(allow_actions=["NoOp"], create="require")
+    callsub create_application
+    int 1
+    return
+
+main_opt_in_to_asset_route@2:
+    // smart_contracts/participation_token/contract.py:23
+    // @arc4.abimethod
+    txn OnCompletion
+    !
+    assert // OnCompletion is NoOp
+    txn ApplicationID
+    assert // is not creating
+    // smart_contracts/participation_token/contract.py:14
+    // class ParticipationToken(ARC4Contract):
+    txn GroupIndex
+    int 1
+    -
+    dup
+    gtxns TypeEnum
+    int pay
+    ==
+    assert // transaction type is pay
+    // smart_contracts/participation_token/contract.py:23
+    // @arc4.abimethod
+    callsub opt_in_to_asset
+    int 1
+    return
+
+main_claim_route@3:
+    // smart_contracts/participation_token/contract.py:70
+    // @arc4.abimethod
+    txn OnCompletion
+    !
+    assert // OnCompletion is NoOp
+    txn ApplicationID
+    assert // is not creating
+    // smart_contracts/participation_token/contract.py:14
+    // class ParticipationToken(ARC4Contract):
+    txn GroupIndex
+    int 1
+    -
+    dup
+    gtxns TypeEnum
+    int pay
+    ==
+    assert // transaction type is pay
+    // smart_contracts/participation_token/contract.py:70
+    // @arc4.abimethod
+    callsub claim
+    int 1
+    return
+
+main_delete_application_route@4:
+    // smart_contracts/participation_token/contract.py:83
+    // @arc4.abimethod(allow_actions=["DeleteApplication"])
+    txn OnCompletion
+    int DeleteApplication
+    ==
+    assert // OnCompletion is DeleteApplication
+    txn ApplicationID
+    assert // is not creating
+    callsub delete_application
+    int 1
+    return
+
+
+// smart_contracts.participation_token.contract.ParticipationToken.create_application(asset_id: uint64, quantity: uint64) -> void:
+create_application:
+    // smart_contracts/participation_token/contract.py:18-19
+    // @arc4.abimethod(allow_actions=["NoOp"], create="require")
+    // def create_application(self, asset_id: UInt64, quantity: UInt64) -> None:
+    proto 2 0
+    // smart_contracts/participation_token/contract.py:20
+    // self.asset_id = asset_id
+    byte "asset_id"
+    frame_dig -2
+    app_global_put
+    // smart_contracts/participation_token/contract.py:21
+    // self.quantity = quantity
+    byte "quantity"
+    frame_dig -1
+    app_global_put
+    retsub
+
+
+// smart_contracts.participation_token.contract.ParticipationToken.opt_in_to_asset(pay_txn: uint64) -> void:
+opt_in_to_asset:
+    // smart_contracts/participation_token/contract.py:23-24
+    // @arc4.abimethod
+    // def opt_in_to_asset(self, pay_txn: gtxn.PaymentTransaction) -> None:
+    proto 1 0
+    // smart_contracts/participation_token/contract.py:25
+    // assert Txn.sender == Global.creator_address
+    txn Sender
+    global CreatorAddress
+    ==
+    assert
+    // smart_contracts/participation_token/contract.py:26
+    // assert not Global.current_application_address.is_opted_in(Asset(self.asset_id))
+    global CurrentApplicationAddress
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    assert // check asset_id exists
+    asset_holding_get AssetBalance
+    bury 1
+    !
+    assert
+    // smart_contracts/participation_token/contract.py:28
+    // assert pay_txn.receiver == Global.current_application_address
+    frame_dig -1
+    gtxns Receiver
+    global CurrentApplicationAddress
+    ==
+    assert
+    // smart_contracts/participation_token/contract.py:29
+    // assert pay_txn.amount == Global.min_balance + Global.asset_opt_in_min_balance
+    frame_dig -1
+    gtxns Amount
+    global MinBalance
+    global AssetOptInMinBalance
+    +
+    ==
+    assert
+    // smart_contracts/participation_token/contract.py:32
+    // xfer_asset=self.asset_id,
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    assert // check asset_id exists
+    // smart_contracts/participation_token/contract.py:33
+    // asset_receiver=Global.current_application_address,
+    global CurrentApplicationAddress
+    // smart_contracts/participation_token/contract.py:38
+    // xfer_asset=self.asset_id,
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    swap
+    cover 3
+    assert // check asset_id exists
+    // smart_contracts/participation_token/contract.py:39
+    // asset_receiver=Global.current_application_address,
+    global CurrentApplicationAddress
+    swap
+    // smart_contracts/participation_token/contract.py:40
+    // asset_amount=self.quantity,
+    int 0
+    byte "quantity"
+    app_global_get_ex
+    assert // check quantity exists
+    // smart_contracts/participation_token/contract.py:41
+    // sender=Txn.sender,
+    txn Sender
+    // smart_contracts/participation_token/contract.py:45
+    // receiver=Global.current_application_address,
+    global CurrentApplicationAddress
+    cover 4
+    // smart_contracts/participation_token/contract.py:47
+    // self.quantity * (Global.min_balance + Global.asset_opt_in_min_balance)
+    int 0
+    byte "quantity"
+    app_global_get_ex
+    assert // check quantity exists
+    global MinBalance
+    global AssetOptInMinBalance
+    +
+    *
+    // smart_contracts/participation_token/contract.py:49
+    // sender=Txn.sender,
+    txn Sender
+    // smart_contracts/participation_token/contract.py:52
+    // itxn.submit_txns(opt_in, asset_xfer, algo_xfer)
+    itxn_begin
+    // smart_contracts/participation_token/contract.py:34
+    // asset_amount=0,
+    int 0
+    itxn_field AssetAmount
+    uncover 4
+    itxn_field AssetReceiver
+    uncover 6
+    itxn_field XferAsset
+    // smart_contracts/participation_token/contract.py:31
+    // opt_in = itxn.AssetTransfer(
+    int axfer
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:52
+    // itxn.submit_txns(opt_in, asset_xfer, algo_xfer)
+    itxn_next
+    uncover 2
+    itxn_field Sender
+    uncover 2
+    itxn_field AssetAmount
+    uncover 2
+    itxn_field AssetReceiver
+    uncover 3
+    itxn_field XferAsset
+    // smart_contracts/participation_token/contract.py:37
+    // asset_xfer = itxn.AssetTransfer(
+    int axfer
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:52
+    // itxn.submit_txns(opt_in, asset_xfer, algo_xfer)
+    itxn_next
+    itxn_field Sender
+    itxn_field Amount
+    itxn_field Receiver
+    // smart_contracts/participation_token/contract.py:44
+    // algo_xfer = itxn.Payment(
+    int pay
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:52
+    // itxn.submit_txns(opt_in, asset_xfer, algo_xfer)
+    itxn_submit
+    retsub
+
+
+// smart_contracts.participation_token.contract.ParticipationToken.claim(claim_txn: uint64) -> void:
+claim:
+    // smart_contracts/participation_token/contract.py:70-71
+    // @arc4.abimethod
+    // def claim(self, claim_txn: gtxn.PaymentTransaction) -> None:
+    proto 1 0
+    // smart_contracts/participation_token/contract.py:72
+    // assert claim_txn.sender == Txn.sender
+    frame_dig -1
+    gtxns Sender
+    txn Sender
+    ==
+    assert
+    // smart_contracts/participation_token/contract.py:74
+    // self.opt_in_before_claim(claim_txn)
+    frame_dig -1
+    callsub opt_in_before_claim
+    // smart_contracts/participation_token/contract.py:76-81
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.asset_id,
+    //     asset_receiver=Txn.sender,
+    //     asset_amount=1,
+    //     sender=Global.current_application_address,
+    // ).submit()
+    itxn_begin
+    // smart_contracts/participation_token/contract.py:77
+    // xfer_asset=self.asset_id,
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    assert // check asset_id exists
+    // smart_contracts/participation_token/contract.py:78
+    // asset_receiver=Txn.sender,
+    txn Sender
+    // smart_contracts/participation_token/contract.py:80
+    // sender=Global.current_application_address,
+    global CurrentApplicationAddress
+    itxn_field Sender
+    // smart_contracts/participation_token/contract.py:79
+    // asset_amount=1,
+    int 1
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // smart_contracts/participation_token/contract.py:76
+    // itxn.AssetTransfer(
+    int axfer
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:76-81
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.asset_id,
+    //     asset_receiver=Txn.sender,
+    //     asset_amount=1,
+    //     sender=Global.current_application_address,
+    // ).submit()
+    itxn_submit
+    retsub
+
+
+// smart_contracts.participation_token.contract.ParticipationToken.opt_in_before_claim(claim_txn: uint64) -> void:
+opt_in_before_claim:
+    // smart_contracts/participation_token/contract.py:54-55
+    // @subroutine
+    // def opt_in_before_claim(self, claim_txn: gtxn.PaymentTransaction) -> None:
+    proto 1 0
+    // smart_contracts/participation_token/contract.py:56
+    // assert claim_txn.sender == Txn.sender
+    frame_dig -1
+    gtxns Sender
+    txn Sender
+    ==
+    assert
+    // smart_contracts/participation_token/contract.py:57
+    // assert not Txn.sender.is_opted_in(Asset(self.asset_id))
+    txn Sender
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    assert // check asset_id exists
+    asset_holding_get AssetBalance
+    bury 1
+    !
+    assert
+    // smart_contracts/participation_token/contract.py:59
+    // if Txn.sender.balance < Global.min_balance + Global.asset_opt_in_min_balance:
+    txn Sender
+    acct_params_get AcctBalance
+    assert // account funded
+    global MinBalance
+    global AssetOptInMinBalance
+    +
+    <
+    bz opt_in_before_claim_after_if_else@3
+    // smart_contracts/participation_token/contract.py:60-64
+    // itxn.Payment(
+    //     receiver=Txn.sender,
+    //     amount=Global.min_balance + Global.asset_opt_in_min_balance,
+    //     sender=Global.current_application_address,
+    // ).submit()
+    itxn_begin
+    // smart_contracts/participation_token/contract.py:61
+    // receiver=Txn.sender,
+    txn Sender
+    // smart_contracts/participation_token/contract.py:62
+    // amount=Global.min_balance + Global.asset_opt_in_min_balance,
+    global MinBalance
+    global AssetOptInMinBalance
+    +
+    // smart_contracts/participation_token/contract.py:63
+    // sender=Global.current_application_address,
+    global CurrentApplicationAddress
+    itxn_field Sender
+    itxn_field Amount
+    itxn_field Receiver
+    // smart_contracts/participation_token/contract.py:60
+    // itxn.Payment(
+    int pay
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:60-64
+    // itxn.Payment(
+    //     receiver=Txn.sender,
+    //     amount=Global.min_balance + Global.asset_opt_in_min_balance,
+    //     sender=Global.current_application_address,
+    // ).submit()
+    itxn_submit
+
+opt_in_before_claim_after_if_else@3:
+    // smart_contracts/participation_token/contract.py:66-68
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.asset_id, asset_receiver=Txn.sender, asset_amount=0
+    // ).submit()
+    itxn_begin
+    // smart_contracts/participation_token/contract.py:67
+    // xfer_asset=self.asset_id, asset_receiver=Txn.sender, asset_amount=0
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    assert // check asset_id exists
+    txn Sender
+    int 0
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // smart_contracts/participation_token/contract.py:66
+    // itxn.AssetTransfer(
+    int axfer
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:66-68
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.asset_id, asset_receiver=Txn.sender, asset_amount=0
+    // ).submit()
+    itxn_submit
+    retsub
+
+
+// smart_contracts.participation_token.contract.ParticipationToken.delete_application() -> void:
+delete_application:
+    // smart_contracts/participation_token/contract.py:83-84
+    // @arc4.abimethod(allow_actions=["DeleteApplication"])
+    // def delete_application(self) -> None:
+    proto 0 0
+    // smart_contracts/participation_token/contract.py:85
+    // assert Txn.sender == Global.creator_address
+    txn Sender
+    global CreatorAddress
+    ==
+    assert
+    // smart_contracts/participation_token/contract.py:87-92
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.asset_id,
+    //     asset_receiver=Global.creator_address,
+    //     asset_amount=0,
+    //     asset_close_to=Global.creator_address,
+    // ).submit()
+    itxn_begin
+    // smart_contracts/participation_token/contract.py:88
+    // xfer_asset=self.asset_id,
+    int 0
+    byte "asset_id"
+    app_global_get_ex
+    assert // check asset_id exists
+    // smart_contracts/participation_token/contract.py:89
+    // asset_receiver=Global.creator_address,
+    global CreatorAddress
+    // smart_contracts/participation_token/contract.py:91
+    // asset_close_to=Global.creator_address,
+    dup
+    itxn_field AssetCloseTo
+    // smart_contracts/participation_token/contract.py:90
+    // asset_amount=0,
+    int 0
+    itxn_field AssetAmount
+    itxn_field AssetReceiver
+    itxn_field XferAsset
+    // smart_contracts/participation_token/contract.py:87
+    // itxn.AssetTransfer(
+    int axfer
+    itxn_field TypeEnum
+    // smart_contracts/participation_token/contract.py:87-92
+    // itxn.AssetTransfer(
+    //     xfer_asset=self.asset_id,
+    //     asset_receiver=Global.creator_address,
+    //     asset_amount=0,
+    //     asset_close_to=Global.creator_address,
+    // ).submit()
+    itxn_submit
+    retsub
