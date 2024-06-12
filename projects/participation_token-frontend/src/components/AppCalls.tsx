@@ -1,6 +1,5 @@
 import * as algokit from '@algorandfoundation/algokit-utils'
 import { TransactionSignerAccount } from '@algorandfoundation/algokit-utils/types/account'
-import { OnSchemaBreak, OnUpdate } from '@algorandfoundation/algokit-utils/types/app'
 import { AppDetails } from '@algorandfoundation/algokit-utils/types/app-client'
 import { useWallet } from '@txnlab/use-wallet'
 import { useSnackbar } from 'notistack'
@@ -49,17 +48,17 @@ const AppCalls = ({ openModal, setModalState }: AppCallsInterface) => {
     } as AppDetails
 
     const appClient = new ParticipationTokenClient(appDetails, algodClient)
-    const deployParams = {
-      onSchemaBreak: OnSchemaBreak.AppendApp,
-      onUpdate: OnUpdate.AppendApp,
-    }
-    await appClient.deploy(deployParams).catch((e: Error) => {
-      enqueueSnackbar(`Error deploying the contract: ${e.message}`, { variant: 'error' })
-      setLoading(false)
-      return
-    })
+    // const deployParams = {
+    //   onSchemaBreak: OnSchemaBreak.AppendApp,
+    //   onUpdate: OnUpdate.AppendApp,
+    // }
+    // await appClient.deploy(deployParams).catch((e: Error) => {
+    //   enqueueSnackbar(`Error deploying the contract: ${e.message}`, { variant: 'error' })
+    //   setLoading(false)
+    //   return
+    // })
 
-    const response = await appClient.create(1004, 100).catch((e: Error) => {
+    const response = await appClient.create.createApplication({ assetId: 1005, quantity: 100 }).catch((e: Error) => {
       enqueueSnackbar(`Error calling the contract: ${e.message}`, { variant: 'error' })
       setLoading(false)
       return

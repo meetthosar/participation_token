@@ -1,7 +1,7 @@
 #pragma version 10
 
 smart_contracts.participation_token.contract.ParticipationToken.clear_state_program:
-    // smart_contracts/participation_token/contract.py:14
+    // smart_contracts/participation_token/contract.py:13
     // class ParticipationToken(ARC4Contract):
     int 1
     return
