@@ -178,20 +178,13 @@ const Home: React.FC<HomeProps> = () => {
                 />
               </div>
             ) : (
+              ''
+            )}
+
+            {activeAddress == creator && appId !== 0 && unitsLeft !== 0n && (
               <div>
                 <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
                 <MethodCall methodFunction={methods.sendMinimumBalance(algorand, data, activeAddress)} text={`Send Minimum Balance`} />
-                {/* <table>
-                  <tbody>
-                    {data.map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {row.map((cell, cellIndex) => (
-                          <td key={cellIndex}>{String(cell)}</td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table> */}
               </div>
             )}
 

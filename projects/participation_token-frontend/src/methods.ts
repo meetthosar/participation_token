@@ -61,7 +61,7 @@ export function create(
     const mbrTxn = await algorand.transactions.payment({
       sender,
       receiver: createResult.appAddress,
-      amount: algokit.algos(0.1 + 0.1),
+      amount: algokit.algos(0.5),
       extraFee: algokit.algos(0.001),
     })
 
