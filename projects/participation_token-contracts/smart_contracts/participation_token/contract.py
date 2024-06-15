@@ -25,7 +25,7 @@ class ParticipationToken(ARC4Contract):
         assert not Global.current_application_address.is_opted_in(Asset(self.asset_id))
 
         assert pay_txn.receiver == Global.current_application_address
-        assert pay_txn.amount == Global.min_balance + Global.asset_opt_in_min_balance
+        # assert pay_txn.amount == Global.min_balance + Global.asset_opt_in_min_balance
 
         itxn.AssetTransfer(
             xfer_asset=self.asset_id,
@@ -75,7 +75,9 @@ class ParticipationToken(ARC4Contract):
         # ).submit()
 
         itxn.AssetTransfer(
-            xfer_asset=self.asset_id, asset_receiver=Txn.sender, asset_amount=1
+            xfer_asset=self.asset_id,
+            asset_receiver=Txn.sender,
+            asset_amount=1,
         ).submit()
 
     @arc4.abimethod(allow_actions=["DeleteApplication"])
