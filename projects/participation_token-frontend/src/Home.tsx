@@ -208,8 +208,9 @@ const Home: React.FC<HomeProps> = () => {
             {activeAddress === creator && appId !== 0 && (
               <MethodCall methodFunction={methods.deleteApp(ptClient, setAppId)} text="Delete App" />
             )}
-          </div>
 
+            {/* <button onClick={login}>Login</button> */}
+          </div>
           <ConnectWallet openModal={openWalletModal} closeModal={toggleWalletModal} />
         </div>
       </div>

@@ -123,3 +123,7 @@ export function deleteApp(ptClient: ParticipationTokenClient, setAppId: (id: num
     setAppId(0)
   }
 }
+
+export function web3auth() {
+  return async () => {}
+}
